@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  kafka:
+    image: wurstmeister/kafka:latest
+    environment:
+      - KAFKA_ADVERTISED_LISTENER=PLAINTEXT://kafka:9093
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENER_PORT=9093
+      - KAFKA_LISTENER_INTERFACENAME=eth0
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-net
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-net
+
+  dotnet-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_BROKER=kafka:9093
+    depends_on:
+      - kafka
+    networks:
+      - kafka-net
+    ports:
+      - "5000:80"
+
+networks:
+  kafka-net:
+    driver: bridge
